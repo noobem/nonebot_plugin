@@ -1,15 +1,7 @@
 from nonebot import on_command, require, get_bot, get_driver
-from nonebot.typing import T_State
-from nonebot.params import State
 from nonebot.adapters.onebot.v11 import (
-    GROUP,
-    PRIVATE_FRIEND,
-    Bot,
     Message,
-    MessageEvent,
-    PrivateMessageEvent,
 )
-import nonebot
 from nonebot.log import logger
 import requests
 import httpx
