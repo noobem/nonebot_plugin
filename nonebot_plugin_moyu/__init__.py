@@ -36,6 +36,7 @@ def down_pic(url):
 
 
 def get_moyuimg():
+    error = "error"
     headers = {
         'user-agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36',
     }
@@ -44,20 +45,19 @@ def get_moyuimg():
         res = httpx.post(req_url, headers=headers, timeout=120)
     except Exception as e:
         logger.warning(e)
-        return ["error", f"API异常{e}", False]
+        return error
 
     try:
         url = res.headers['location']
         img = down_pic(url)
         base64 = convert_b64(img)
-        data, pic = "", ""
+        pic = ""
         if type(base64) == str:
             pic = "[CQ:image,file=base64://" + base64 + "]"
-            data = "获取图片成功"
-            return [pic, data, True]
+            return pic
     except Exception as e:
         logger.error("获取摸鱼图片时出错。", e)
-        return ["error", f"API异常{e}", False]
+        return error
 
 
 @moyu.handle()
@@ -65,8 +65,9 @@ async def send_moyu():
     try:
          result = get_moyuimg()
     except Exception as e:
-        await moyu.finish(f"{result[1]}\n请稍后再试！！")
-    await moyu.send(message=Message(result[0]))
+        await moyu.finish(f"{result}\n请稍后再试！！")
+        raise e
+    await moyu.send(message=Message(result))
 
 
 group_list = get_driver().config.moyugroups if hasattr(get_driver().config, "moyugroups") else list()
@@ -84,10 +85,10 @@ async def time_for_moyu():
          result = get_moyuimg()
     except Exception as e:
         logger.error("获取摸鱼图片时出错。", e)
+        raise e
     result = get_moyuimg()
-    msg = result[0]
-    if msg and len(group_list) > 0:
+    if result and len(group_list) > 0:
         for group_id in group_list:
-            await bot.send_group_msg(group_id=int(group_id), message=msg)
+            await bot.send_group_msg(group_id=int(group_id), message=result)
         
         logger.info(f"已群发摸鱼提醒")
